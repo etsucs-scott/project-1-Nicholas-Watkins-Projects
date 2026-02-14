@@ -5,7 +5,9 @@
         public static void Main(string[] args)
         {
             Maze maze = new Maze();
-            maze.CreateMaze();
+            maze.MazeGen();
+
+            maze.MazeDisplay();
         }
     }
 }
