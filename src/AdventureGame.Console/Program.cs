@@ -5,9 +5,15 @@
         public static void Main(string[] args)
         {
             Maze maze = new Maze();
-            maze.MazeGen();
+            Player player = maze.MazeGen();
 
-            maze.MazeDisplay();
+            while (player._health > 0 || maze._win)
+            {
+                maze.MazeDisplay();
+                player.Move(maze._maze);
+            }
+            
+            Console.WriteLine("End of game");
         }
     }
 }

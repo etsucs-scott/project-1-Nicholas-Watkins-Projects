@@ -29,9 +29,14 @@ public abstract class Item : IUseable , ISpawnable
 public class Player : ICharacter, ISpawnable
 {
     public string _icon { get; private set; } = " I ";
-    public int _health { get; private set; }
+    public int _health { get; private set; } = 100;
+    public int _baseDamage { get; private set; } = 10;
     public int _currentDamage { get; private set; }
     public (int, int) coords { get; set; }
+    public Player()
+    {
+        _currentDamage = _baseDamage;
+    }
     public void Attack(ICharacter target)
     {
         target.Damage(_currentDamage);
@@ -52,19 +57,19 @@ public class Player : ICharacter, ISpawnable
         switch (playerInput)
         {
             case "W":
-
+                Console.Write("W");
                 break;
             case "S":
-
+                Console.Write("S");
                 break;
             case "A":
-
+                Console.Write("A");
                 break;
             case "D":
-
+                Console.Write("D");
                 break;
         }
-
+        return maze;
     }
     public void Use(IUseable thing)
     {
@@ -137,6 +142,7 @@ public class Maze
 {
     private int _height;
     private int _width;
+    public bool _win { get; private set; } = false;
 
     // public List<double> _spawnChance { get; private set; } = new List<double>();
     public List<ISpawnable[]> _maze { get; set; }
@@ -218,6 +224,7 @@ public class Maze
             _maze[newCoord.Item2][newCoord.Item1] = spawnable;
             _coordStorage.Add(newCoord);
         }
+        return player;
     }
     public List<ISpawnable[]> MazeDisplay()
     {
