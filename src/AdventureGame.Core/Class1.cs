@@ -11,20 +11,16 @@ public interface ICharacter
     void Attack(ICharacter target);
     bool Damage(int damage);
 }
-public interface IUseable
-{
-    // Empty for now because it'll be used as a way to interact with things (monsters, items)
-}
 public interface ISpawnable
 {
     public string _icon { get; }
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
 }
-public abstract class Item : IUseable , ISpawnable
+public abstract class Item : ISpawnable
 {
     public string? _name { get; set; }
     public string? _icon { get; set; }
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
 }
 public class Player : ICharacter, ISpawnable
 {
@@ -32,10 +28,12 @@ public class Player : ICharacter, ISpawnable
     public int _health { get; private set; } = 100;
     public int _baseDamage { get; private set; } = 10;
     public int _currentDamage { get; private set; }
-    public (int, int) coords { get; set; }
+    public List<Item> _inventory { get; private set; }
+    public (int, int) _coords { get; set; }
     public Player()
     {
         _currentDamage = _baseDamage;
+        _inventory = new List<Item>();
     }
     public void Attack(ICharacter target)
     {
@@ -50,30 +48,83 @@ public class Player : ICharacter, ISpawnable
         }
         return false;
     }
-    public List<ISpawnable[]> Move(List<ISpawnable[]> maze)
+    public void Move(Maze maze, Player player)
     {
+        Console.WriteLine($"\nHP: {_health}\t\tDamage: {_currentDamage} ({_baseDamage} + {_currentDamage - _baseDamage})");
         // Check next area and mv to spot if empty or Use thing
         string playerInput = Console.ReadKey(true).Key.ToString();
+        (int, int) newCoords;
+
         switch (playerInput)
         {
             case "W":
-                Console.Write("W");
+                newCoords = (_coords.Item1, _coords.Item2 - 1);
                 break;
             case "S":
-                Console.Write("S");
+                newCoords = (_coords.Item1, _coords.Item2 + 1);
                 break;
             case "A":
-                Console.Write("A");
+                newCoords = (_coords.Item1 - 1, _coords.Item2);
                 break;
             case "D":
-                Console.Write("D");
+                newCoords = (_coords.Item1 + 1, _coords.Item2);
+                break;
+            default:
+                newCoords = _coords;
                 break;
         }
-        return maze;
+        // Check next point for spawnables
+        ISpawnable item = maze.CheckCoordPosition(newCoords);
+
+        // PLACEHOLDER | Replace with function that deals with different spawnables accordingly
+        // Empty
+        if (item.GetType() == typeof(Empty))
+        {
+            maze._maze[_coords.Item2][_coords.Item1] = new Empty(); // Previous character area to empty
+            maze._maze[newCoords.Item2][newCoords.Item1] = player; // Set next character to empty
+            player._coords = newCoords;
+        }
+
+        // Potions & Weapons
+        if (item.GetType() == typeof(Weapon) || item.GetType() == typeof(Potion))
+        {
+            _inventory.Add((Item)item); // Change later to change to weapon or potion appropriatly
+            player.Use(item);
+            maze._maze[_coords.Item2][_coords.Item1] = new Empty(); // Previous character area to empty
+            maze._maze[newCoords.Item2][newCoords.Item1] = player; // Set next character to empty
+            player._coords = newCoords;
+        }
+
+        // Monster
+        if (item.GetType() == typeof(Monster))
+        {
+            // PASS
+        }
+
+        // ExitTile
+        if (item.GetType() == typeof(ExitTile))
+        {
+            maze._win = true;
+            maze._maze[_coords.Item2][_coords.Item1] = new Empty(); // Previous character area to empty
+            maze._maze[newCoords.Item2][newCoords.Item1] = player; // Set next character to empty
+            player._coords = newCoords;
+        }
     }
-    public void Use(IUseable thing)
+    public void Use(ISpawnable item)
     {
         // Remove thing from mazelist 
+        if (item.GetType() == typeof(Weapon))
+        {
+            Weapon weapon = (Weapon)item;
+            if (weapon._damageBonus > (_currentDamage - _baseDamage))
+                _currentDamage += weapon._damageBonus;
+        }
+        if (item.GetType() == typeof(Potion))
+        {
+            Potion potion = (Potion)item;
+            _health += potion._healthAmount;
+            _health = Math.Min(150, _health);
+        }
     }
 }
 public class Monster : ICharacter, ISpawnable
@@ -85,7 +136,7 @@ public class Monster : ICharacter, ISpawnable
     }
     public string _icon { get; private set; } = " M ";
     public string _name = "Monster";
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
     public void Attack(ICharacter target)
@@ -108,7 +159,7 @@ public class Weapon : Item
     {
         _icon = " W ";
         _name = "Weapon";
-        _damageBonus = 10; // PLACEHOLDER | NEEDS TO BE RANDOM 10 - 25
+        _damageBonus = 10; // PLACEHOLDER | NEEDS TO BE RANDOM 5 - 15
     }
     public int _damageBonus { get; private set; }
 }
@@ -125,24 +176,24 @@ public class Potion : Item
 public class Empty : ISpawnable
 {
     public string _icon { get; private set; } = " . ";
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
 }
 public class Wall : ISpawnable
 {
     public string _icon { get; private set; } = " ■ ";
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
 }
 public class ExitTile : ISpawnable
 {
     public string _icon { get; private set; } = " E ";
-    public (int, int) coords { get; set; }
+    public (int, int) _coords { get; set; }
     // Method to end game? ##################################################################################
 }
 public class Maze
 {
     private int _height;
     private int _width;
-    public bool _win { get; private set; } = false;
+    public bool _win { get; set; } = false;
 
     // public List<double> _spawnChance { get; private set; } = new List<double>();
     public List<ISpawnable[]> _maze { get; set; }
@@ -196,17 +247,17 @@ public class Maze
         Player player = new Player();
         spawnables.Add(player);
 
-        // PLACEHOLDER for random amount of items and monsters and walls
+        // PLACEHOLDER for random amount of items and monsters and walls TEMPORARY
         for (int i = 0; i < 12; i++)
             spawnables.Add(new Wall());
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 5; i++)
         {
             spawnables.Add(new Potion());
             spawnables.Add(new Weapon());
         }
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 2; i++)
             spawnables.Add(new Monster(health: 30));
 
         // Check Coord bank and assign spawnables
@@ -220,7 +271,7 @@ public class Maze
                 //     wallCheck = !CanPlaceWall(newCoord);
                 newCoord = CoordGen();
             }
-            spawnable.coords = newCoord;
+            spawnable._coords = newCoord;
             _maze[newCoord.Item2][newCoord.Item1] = spawnable;
             _coordStorage.Add(newCoord);
         }

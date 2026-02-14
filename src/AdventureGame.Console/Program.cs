@@ -7,12 +7,13 @@
             Maze maze = new Maze();
             Player player = maze.MazeGen();
 
-            while (player._health > 0 || maze._win)
+            while (player._health > 0 && !maze._win)
             {
                 maze.MazeDisplay();
-                player.Move(maze._maze);
+                player.Move(maze, player);
             }
-            
+
+            maze.MazeDisplay();
             Console.WriteLine("End of game");
         }
     }
