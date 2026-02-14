@@ -5,7 +5,8 @@
         public static void Main(string[] args)
         {
             Maze maze = new Maze();
-            Player player = maze.MazeGen();
+            Player player = new Player();
+            maze.MazeGen(player);
 
             while (player._health > 0 && !maze._win)
             {

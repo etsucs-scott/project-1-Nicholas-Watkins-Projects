@@ -18,8 +18,9 @@ public interface ISpawnable
 }
 public abstract class Item : ISpawnable
 {
-    public string? _name { get; set; }
     public string? _icon { get; set; }
+    public string? _name { get; set; }
+    public string? _desc { get; set; }
     public (int, int) _coords { get; set; }
 }
 public class Player : ICharacter, ISpawnable
@@ -30,6 +31,7 @@ public class Player : ICharacter, ISpawnable
     public int _currentDamage { get; private set; }
     public List<Item> _inventory { get; private set; }
     public (int, int) _coords { get; set; }
+    public int _points { get; private set; }
     public Player()
     {
         _currentDamage = _baseDamage;
@@ -86,14 +88,15 @@ public class Player : ICharacter, ISpawnable
         // Potions & Weapons
         if (item.GetType() == typeof(Weapon) || item.GetType() == typeof(Potion))
         {
-            _inventory.Add((Item)item); // Change later to change to weapon or potion appropriatly
-            player.Use(item);
+            Item itemCon = (Item)item;
+            _inventory.Add(itemCon); // Change later to change to weapon or potion appropriatly
+            player.Use(itemCon);
             maze._maze[_coords.Item2][_coords.Item1] = new Empty(); // Previous character area to empty
             maze._maze[newCoords.Item2][newCoords.Item1] = player; // Set next character to empty
             player._coords = newCoords;
         }
 
-        // Monster
+        // Monster - When monster is killed add points (_points) based on health + enemy health + attack...
         if (item.GetType() == typeof(Monster))
         {
             Monster monster = (Monster)item;
@@ -122,6 +125,7 @@ public class Player : ICharacter, ISpawnable
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("You died in battle\nThe world continues on without you...");
+                maze._maze[_coords.Item2][_coords.Item1] = new Empty();
             }
             Console.ResetColor();
             Console.WriteLine("Press enter to continue...");
@@ -137,14 +141,14 @@ public class Player : ICharacter, ISpawnable
             player._coords = newCoords;
         }
     }
-    public void Use(ISpawnable item)
+    public void Use(Item item)
     {
         // Remove thing from mazelist 
         if (item.GetType() == typeof(Weapon))
         {
             Weapon weapon = (Weapon)item;
             if (weapon._damageBonus > (_currentDamage - _baseDamage))
-                _currentDamage += weapon._damageBonus;
+                _currentDamage = weapon._damageBonus + _baseDamage;
         }
         if (item.GetType() == typeof(Potion))
         {
@@ -152,6 +156,10 @@ public class Player : ICharacter, ISpawnable
             _health += potion._healthAmount;
             _health = Math.Min(150, _health);
         }
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine("\n" + item._desc + "\nPress enter to continue...");
+        Console.ReadLine();
+        Console.ResetColor();
     }
 }
 public class Monster : ICharacter, ISpawnable
@@ -161,10 +169,10 @@ public class Monster : ICharacter, ISpawnable
     public (int, int) _coords { get; set; }
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
-    public Monster(int health)
+    public Monster(int health = 30, int damage = 10)
     {
-        _health = health; // PLACEHOLDER | RANDOM 30 - 50 
-        _currentDamage = 10; // PLACEHOLDER | RANDOM 10 - 15
+        _health = health;
+        _currentDamage = damage;
     }
     public void Attack(ICharacter target)
     {
@@ -180,21 +188,23 @@ public class Monster : ICharacter, ISpawnable
 }
 public class Weapon : Item
 {
-    public Weapon()
+    public Weapon(int damage = 10)
     {
         _icon = " W ";
         _name = "Weapon";
-        _damageBonus = 10; // PLACEHOLDER | NEEDS TO BE RANDOM 5 - 15
+        _damageBonus = damage;
+        _desc = $"You have picked up a +{_damageBonus} {_name}";
     }
     public int _damageBonus { get; private set; }
 }
 public class Potion : Item
 {
-    public Potion()
+    public Potion(int _healAmount = 20)
     {
         _icon = " P ";
         _name = "Potion";
-        _healthAmount = 20; // PLACEHOLDER | NEEDS TO BE RANDOM 20 - 30
+        _desc = $"You have picked up a +{_healAmount} {_name}";
+        _healthAmount = _healAmount;
     }
     public int _healthAmount { get; private set; }
 }
@@ -238,7 +248,7 @@ public class Maze
         _itemChance = itemChance;
         _wallChance = wallChance;
     }
-    public Player MazeGen()
+    public void MazeGen(Player player)
     {
         // Make Empty Maze
         for (int y = 0; y < _height; y++)
@@ -268,24 +278,31 @@ public class Maze
 
         // Make spawnlist && Generate Player & End -> Walls -> items & monsters
         List<ISpawnable> spawnables = new List<ISpawnable>();
-        spawnables.Add(new ExitTile());
-        Player player = new Player();
-        spawnables.Add(player);
+        Random randPick = new Random();
 
-        // PLACEHOLDER for random amount of items and monsters and walls TEMPORARY
-        for (int i = 0; i < 12; i++)
+        // PLACEHOLDER, Could init better in some way probably
+        int monsterAmount = (int)(_height * _height * _monsterChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
+        int potionAmount = (int)(_height * _height * _itemChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
+        int weaponAmount = (int)(_height * _height * _itemChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
+        int wallAmount = (int)(_height * _height * _wallChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
+
+        spawnables.Add(player);
+        spawnables.Add(new ExitTile());
+
+        // Generate spawnables | Could be better, settled for right now
+        for (int i = 0; i < wallAmount; i++)
             spawnables.Add(new Wall());
 
-        for (int i = 0; i < 5; i++)
-        {
-            spawnables.Add(new Potion());
-            spawnables.Add(new Weapon());
-        }
+        for (int i = 0; i < potionAmount; i++)
+            spawnables.Add(new Potion(_healAmount: randPick.Next(20, 30)));
 
-        for (int i = 0; i < 2; i++)
-            spawnables.Add(new Monster(health: 30));
+        for (int i = 0; i < weaponAmount; i++)
+            spawnables.Add(new Weapon(damage: randPick.Next(5, 20)));
 
-        // Check Coord bank and assign spawnables
+        for (int i = 0; i < monsterAmount; i++)
+            spawnables.Add(new Monster(health: randPick.Next(30, 50), damage: randPick.Next(10, 15)));
+
+        // Check Coord bank and assign spawnables coordinates in _coordStorage | Will also have wall logic to prevent "lock ins"
         foreach (ISpawnable spawnable in spawnables)
         {
             bool wallCheck = false;
@@ -300,7 +317,6 @@ public class Maze
             _maze[newCoord.Item2][newCoord.Item1] = spawnable;
             _coordStorage.Add(newCoord);
         }
-        return player;
     }
     public void MazeDisplay()
     {
