@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Dynamic;
 using System.Globalization;
 using System.Runtime.InteropServices.Swift;
 using System.Security.Cryptography.X509Certificates;
@@ -25,7 +26,7 @@ public abstract class Item : IUseable , ISpawnable
 }
 public class Player : ICharacter, ISpawnable
 {
-    public string _icon { get; private set; }
+    public string _icon { get; private set; } = " I ";
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
     public void Attack(ICharacter target)
@@ -50,14 +51,14 @@ public class Player : ICharacter, ISpawnable
         // Remove thing from mazelist 
     }
 }
-public class Monster : ICharacter
+public class Monster : ICharacter, ISpawnable
 {
     public Monster(int health)
     {
         _health = health; // PLACEHOLDER | RANDOM 30 - 50 
         _currentDamage = 10; // PLACEHOLDER | RANDOM 10 - 15
     }
-    public string _icon = " M ";
+    public string _icon { get; private set; } = " M ";
     public string _name = "Monster";
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
@@ -103,6 +104,11 @@ public class Wall : ISpawnable
 {
     public string _icon { get; private set; } = " ■ ";
 }
+public class ExitTile : ISpawnable
+{
+    public string _icon { get; private set; } = " E ";
+    // Method to end game? ##################################################################################
+}
 
 public class Maze
 {
@@ -112,48 +118,73 @@ public class Maze
     // public List<double> _spawnChance { get; private set; } = new List<double>();
     public List<ISpawnable[]> _maze { get; private set; }
     public List<(int, int)> _coordStorage { get; private set; }
+    double _monsterChance;
+    double _itemChance;
+    double _wallChance;
 
     // Should replace double with float but got error
-    public Maze(int height = 10)
+    public Maze(int height = 10, double monsterChance = .05, double itemChance = .09, double wallChance = .15)
     {
         _height = height;
         _width = height;
         _maze = new List<ISpawnable[]>();
         _coordStorage = new List<(int, int)>();
+        _monsterChance = monsterChance;
+        _itemChance = itemChance;
+        _wallChance = wallChance;
     }
     public void MazeGen()
     {
-        // Make Solid line
-        ISpawnable[] wallLine = new ISpawnable[_width];
-        for (int x = 0; x < _width; x++)
-            wallLine[x] = new Wall();
-
-        // Make Mid line
-        ISpawnable[] midLine = new ISpawnable[_width];
-        for (int x = 0; x < _width; x++)
-            if (x == 0 || x == _width - 1)
-                midLine[x] = new Wall();
-            else
-                midLine[x] = new Empty();
-
         // Make Empty Maze
         for (int y = 0; y < _height; y++)
         {
             if (y == 0 || y == _width - 1)
+            {
+                // Make Solid line
+                ISpawnable[] wallLine = new ISpawnable[_width];
+                for (int x = 0; x < _width; x++)
+                    wallLine[x] = new Wall();
                 _maze.Add(wallLine);
+            }
             else
+            {
+                // Make Mid line
+                ISpawnable[] midLine = new ISpawnable[_width];
+                for (int x = 0; x < _width; x++)
+                {
+                    if (x == 0 || x == _width - 1)
+                        midLine[x] = new Wall();
+                    else
+                        midLine[x] = new Empty();
+                }
                 _maze.Add(midLine);
+            }
         }
 
         // Generate Player & End -> Walls -> items & monsters
-        Console.WriteLine($"Check = {(1, 1) == (1, 1)}");
-        Console.WriteLine($"Coords = {CoordGen()}");
+        _coordStorage.Add((1, 1));
 
-        
+        // Make Spawn list ################################################################################
+        List<ISpawnable> spawnables = new List<ISpawnable>();
+        spawnables.Add(new ExitTile());
+        spawnables.Add(new Player());
+        spawnables.Add(new Monster(40));
+
+        // Check Coord bank and assign spawnable
+        foreach (ISpawnable spawnable in spawnables)
+        {
+            (int, int) newCoord = CoordGen();
+            while (InCoordBank(newCoord))
+            {
+                newCoord = CoordGen();
+            }
+            _maze[newCoord.Item2][newCoord.Item1] = spawnable;
+            _coordStorage.Add(newCoord);
+        }
     }
     public void MazeDisplay()
     {
-        // Console.Clear(); // ########################### DEBUG DEBUG ########################################
+        Console.Clear(); // ########################### DEBUG DEBUG ########################################
         foreach (ISpawnable[] itemList in _maze)
         {
             foreach (ISpawnable item in itemList)
@@ -167,5 +198,14 @@ public class Maze
     {
         Random randPick = new Random();
         return (randPick.Next(1, _width - 1), randPick.Next(1, _width - 1));
+    }
+    public bool InCoordBank((int, int) coord)
+    {
+        // Returns true when coords in Coord bank, false if not
+        if (_coordStorage.Contains(coord))
+        {
+            return true;
+        }
+        return false;
     }
 }
