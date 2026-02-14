@@ -14,7 +14,15 @@
             }
 
             maze.MazeDisplay();
-            Console.WriteLine("End of game");
+
+            Console.ForegroundColor = ConsoleColor.DarkMagenta;
+            if (player._health > 0)
+            {
+                Console.WriteLine("You continue deeper into the mazes for your hunt for glory...\nPress enter to continue...");
+                Console.ReadLine();
+                Console.ResetColor();
+            }
+            // Maybe add loop for new game?????
         }
     }
 }

@@ -9,7 +9,7 @@ namespace AdventureGame.Core;
 public interface ICharacter
 {
     void Attack(ICharacter target);
-    bool Damage(int damage);
+    void Damage(int damage);
 }
 public interface ISpawnable
 {
@@ -39,14 +39,12 @@ public class Player : ICharacter, ISpawnable
     {
         target.Damage(_currentDamage);
     }
-    public bool Damage(int damage)
+    public void Damage(int damage)
     {
-        _health -= damage;
-        if (_health <= 0)
-        {
-            return true;
-        }
-        return false;
+        if (_health - damage < 0)
+            _health = 0;
+        else
+            _health -= damage;
     }
     public void Move(Maze maze, Player player)
     {
@@ -98,7 +96,36 @@ public class Player : ICharacter, ISpawnable
         // Monster
         if (item.GetType() == typeof(Monster))
         {
-            // PASS
+            Monster monster = (Monster)item;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"\nAttacking a Monster... (HP:{monster._health} | D:{monster._currentDamage})\n");
+            while (monster._health > 0 && _health > 0)
+            {
+                player.Attack(monster);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"You attack for {_currentDamage} damage!\n\tthe monsters health is down to {monster._health}\n");
+                if (monster._health <= 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("You have kill the monster!");
+                    (int, int) monsterCoords = monster._coords;
+                    maze._maze[monsterCoords.Item2][monsterCoords.Item1] = new Empty();
+                }
+                else
+                {
+                    monster.Attack(player);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"The monster attacks you for {monster._currentDamage} damage!\n\t your health is at {player._health}\n");
+                }
+            }
+            if (_health <= 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("You died in battle\nThe world continues on without you...");
+            }
+            Console.ResetColor();
+            Console.WriteLine("Press enter to continue...");
+            Console.ReadLine();
         }
 
         // ExitTile
@@ -129,28 +156,26 @@ public class Player : ICharacter, ISpawnable
 }
 public class Monster : ICharacter, ISpawnable
 {
-    public Monster(int health)
-    {
-        _health = health; // PLACEHOLDER | RANDOM 30 - 50 
-        _currentDamage = 10; // PLACEHOLDER | RANDOM 10 - 15
-    }
     public string _icon { get; private set; } = " M ";
     public string _name = "Monster";
     public (int, int) _coords { get; set; }
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
+    public Monster(int health)
+    {
+        _health = health; // PLACEHOLDER | RANDOM 30 - 50 
+        _currentDamage = 10; // PLACEHOLDER | RANDOM 10 - 15
+    }
     public void Attack(ICharacter target)
     {
         target.Damage(_currentDamage);
     }
-    public bool Damage(int damage)
+    public void Damage(int damage)
     {
-        _health -= damage;
-        if (_health <= 0)
-        {
-            return true;
-        }
-        return false;
+        if (_health - damage < 0)
+            _health = 0;
+        else
+            _health -= damage;
     }
 }
 public class Weapon : Item
@@ -277,9 +302,11 @@ public class Maze
         }
         return player;
     }
-    public List<ISpawnable[]> MazeDisplay()
+    public void MazeDisplay()
     {
         Console.Clear(); // ########################### DEBUG DEBUG ########################################
+        // Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.BackgroundColor = ConsoleColor.DarkCyan;
         foreach (ISpawnable[] itemList in _maze)
         {
             foreach (ISpawnable item in itemList)
@@ -288,7 +315,7 @@ public class Maze
             }
             Console.Write("\n");
         }
-        return _maze;
+        Console.ResetColor();
     }
     public (int, int) CoordGen()
     {
