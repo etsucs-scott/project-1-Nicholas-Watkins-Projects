@@ -18,17 +18,20 @@ public interface IUseable
 public interface ISpawnable
 {
     public string _icon { get; }
+    public (int, int) coords { get; set; }
 }
 public abstract class Item : IUseable , ISpawnable
 {
     public string? _name { get; set; }
     public string? _icon { get; set; }
+    public (int, int) coords { get; set; }
 }
 public class Player : ICharacter, ISpawnable
 {
     public string _icon { get; private set; } = " I ";
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
+    public (int, int) coords { get; set; }
     public void Attack(ICharacter target)
     {
         target.Damage(_currentDamage);
@@ -42,9 +45,26 @@ public class Player : ICharacter, ISpawnable
         }
         return false;
     }
-    public void Move(int x, int y)
+    public List<ISpawnable[]> Move(List<ISpawnable[]> maze)
     {
         // Check next area and mv to spot if empty or Use thing
+        string playerInput = Console.ReadKey(true).Key.ToString();
+        switch (playerInput)
+        {
+            case "W":
+
+                break;
+            case "S":
+
+                break;
+            case "A":
+
+                break;
+            case "D":
+
+                break;
+        }
+
     }
     public void Use(IUseable thing)
     {
@@ -60,6 +80,7 @@ public class Monster : ICharacter, ISpawnable
     }
     public string _icon { get; private set; } = " M ";
     public string _name = "Monster";
+    public (int, int) coords { get; set; }
     public int _health { get; private set; }
     public int _currentDamage { get; private set; }
     public void Attack(ICharacter target)
@@ -99,24 +120,26 @@ public class Potion : Item
 public class Empty : ISpawnable
 {
     public string _icon { get; private set; } = " . ";
+    public (int, int) coords { get; set; }
 }
 public class Wall : ISpawnable
 {
     public string _icon { get; private set; } = " ■ ";
+    public (int, int) coords { get; set; }
 }
 public class ExitTile : ISpawnable
 {
     public string _icon { get; private set; } = " E ";
+    public (int, int) coords { get; set; }
     // Method to end game? ##################################################################################
 }
-
 public class Maze
 {
     private int _height;
     private int _width;
 
     // public List<double> _spawnChance { get; private set; } = new List<double>();
-    public List<ISpawnable[]> _maze { get; private set; }
+    public List<ISpawnable[]> _maze { get; set; }
     public List<(int, int)> _coordStorage { get; private set; }
     double _monsterChance;
     double _itemChance;
@@ -133,22 +156,22 @@ public class Maze
         _itemChance = itemChance;
         _wallChance = wallChance;
     }
-    public void MazeGen()
+    public Player MazeGen()
     {
         // Make Empty Maze
         for (int y = 0; y < _height; y++)
         {
+            // Make Solid line
             if (y == 0 || y == _width - 1)
             {
-                // Make Solid line
                 ISpawnable[] wallLine = new ISpawnable[_width];
                 for (int x = 0; x < _width; x++)
                     wallLine[x] = new Wall();
                 _maze.Add(wallLine);
             }
+            // Make Mid line
             else
             {
-                // Make Mid line
                 ISpawnable[] midLine = new ISpawnable[_width];
                 for (int x = 0; x < _width; x++)
                 {
@@ -161,28 +184,42 @@ public class Maze
             }
         }
 
-        // Generate Player & End -> Walls -> items & monsters
-        _coordStorage.Add((1, 1));
-
-        // Make Spawn list ################################################################################
+        // Make spawnlist && Generate Player & End -> Walls -> items & monsters
         List<ISpawnable> spawnables = new List<ISpawnable>();
         spawnables.Add(new ExitTile());
-        spawnables.Add(new Player());
-        spawnables.Add(new Monster(40));
+        Player player = new Player();
+        spawnables.Add(player);
 
-        // Check Coord bank and assign spawnable
+        // PLACEHOLDER for random amount of items and monsters and walls
+        for (int i = 0; i < 12; i++)
+            spawnables.Add(new Wall());
+
+        for (int i = 0; i < 3; i++)
+        {
+            spawnables.Add(new Potion());
+            spawnables.Add(new Weapon());
+        }
+
+        for (int i = 0; i < 4; i++)
+            spawnables.Add(new Monster(health: 30));
+
+        // Check Coord bank and assign spawnables
         foreach (ISpawnable spawnable in spawnables)
         {
+            bool wallCheck = false;
             (int, int) newCoord = CoordGen();
-            while (InCoordBank(newCoord))
+            while (InCoordBank(newCoord) || wallCheck)
             {
+                // if (spawnable.GetType() == typeof(Wall)) // wall check disabled for now ########### PLACEHOLDER ##############
+                //     wallCheck = !CanPlaceWall(newCoord);
                 newCoord = CoordGen();
             }
+            spawnable.coords = newCoord;
             _maze[newCoord.Item2][newCoord.Item1] = spawnable;
             _coordStorage.Add(newCoord);
         }
     }
-    public void MazeDisplay()
+    public List<ISpawnable[]> MazeDisplay()
     {
         Console.Clear(); // ########################### DEBUG DEBUG ########################################
         foreach (ISpawnable[] itemList in _maze)
@@ -193,6 +230,7 @@ public class Maze
             }
             Console.Write("\n");
         }
+        return _maze;
     }
     public (int, int) CoordGen()
     {
@@ -207,5 +245,30 @@ public class Maze
             return true;
         }
         return false;
+    }
+    public ISpawnable CheckCoordPosition((int, int) coord) { return _maze[coord.Item2][coord.Item1]; }
+
+    // Honestly Could make an algorithm that would be better than this...
+    public bool CanPlaceWall((int, int) coord)
+    {
+        List<(int, int)> coordAround = new List<(int, int)>() // Creates a 3x3 coord list with the original coord at the center
+        {
+            (coord.Item1 - 1, coord.Item2 - 1), (coord.Item1, coord.Item2 - 1), (coord.Item1 + 1, coord.Item2 - 1),
+            (coord.Item1 - 1, coord.Item2), coord, (coord.Item1 + 1, coord.Item2),
+            (coord.Item1 - 1, coord.Item2 + 1), (coord.Item1, coord.Item2 + 1), (coord.Item1 + 1, coord.Item2 + 1)
+        };
+
+        // Checks diagonals from middle and returns false if detecting a wall | Prevents cut offs theoretically...
+        for (int i = 0; i < coordAround.Count(); i++)
+        {
+            if (i % 2 != 0) // Checks diagonals
+            {
+                if (_maze[coordAround[i].Item2][coordAround[i].Item1].GetType() == typeof(Wall))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
