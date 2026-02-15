@@ -4,7 +4,7 @@
     {
         public static void Main(string[] args)
         {
-            Maze maze = new Maze();
+            Maze maze = new Maze(height: 10);
             Player player = new Player();
             maze.MazeGen(player);
 

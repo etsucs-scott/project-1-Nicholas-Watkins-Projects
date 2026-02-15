@@ -222,7 +222,6 @@ public class ExitTile : ISpawnable
 {
     public string _icon { get; private set; } = " E ";
     public (int, int) _coords { get; set; }
-    // Method to end game? ##################################################################################
 }
 public class Maze
 {
@@ -238,7 +237,7 @@ public class Maze
     double _wallChance;
 
     // Should replace double with float but got error
-    public Maze(int height = 10, double monsterChance = .05, double itemChance = .09, double wallChance = .15)
+    public Maze(int height = 10, double monsterChance = .45, double itemChance = .35, double wallChance = .75)
     {
         _height = height;
         _width = height;
@@ -281,10 +280,14 @@ public class Maze
         Random randPick = new Random();
 
         // PLACEHOLDER, Could init better in some way probably
-        int monsterAmount = (int)(_height * _height * _monsterChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
-        int potionAmount = (int)(_height * _height * _itemChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
-        int weaponAmount = (int)(_height * _height * _itemChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
-        int wallAmount = (int)(_height * _height * _wallChance) + randPick.Next(-(int)(_width/2), (int)(_width/2));
+        // int dif = _width / (4 * _width);
+        int dif = 0;
+        int mazeArea = _height * _height / 5;
+
+        int monsterAmount = (int)(mazeArea * _monsterChance) + randPick.Next(-dif, dif);
+        int potionAmount = (int)(mazeArea * _itemChance) + randPick.Next(-dif, dif);
+        int weaponAmount = (int)(mazeArea * _itemChance) + randPick.Next(-dif, dif);
+        int wallAmount = (int)(mazeArea * _wallChance) + randPick.Next(-dif, dif);
 
         spawnables.Add(player);
         spawnables.Add(new ExitTile());
