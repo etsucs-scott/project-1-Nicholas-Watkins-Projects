@@ -12,32 +12,32 @@ This repository is intentionally minimal. You are responsible for:
 
 ---
 
-## Getting Started (CLI)
+To build and run the game enter "dotnet build" in the terminal in the same directory as this README file
 
-You may use **Visual Studio**, **VS Code**, or the **terminal**.
+Next, enter "dotnet run --project src/AdventureGame.Console" 
 
-### Create a solution
-```bash
-dotnet new sln -n ProjectName
-```
+The game will now start in the terminal
 
-### Create a project (example: console app)
-```bash
-dotnet new console -n ProjectName.App
-```
 
-### Add the project to the solution
-```bash
-dotnet sln add ProjectName.App
-```
+To move in the game, you use wasd
+w - up
+s - down
+a - left
+d - right
 
-### Build and run
-```bash
-dotnet build
-dotnet run --project ProjectName.App
-```
+You will automatically interact with things on the maze
 
-## Notes
-- Commit early and commit often.
-- Your repository history is part of your submission.
-- Update this README with build/run instructions specific to your project.
+The maze will appear in a 15x15 layout and underneath it is your health and damage
+
+HP: 100         Damage: 10 (10 + 0)
+^                       ^   ^    ^
+Current health          Total damage (base damage + weapon modifier)
+
+
+To win the game, you need to reach the exit tile, noted as a character "E". As long as you reach it you win.
+Once you win the game you will be prompted to replay. Enter "Y" to continue or anything else to quit.
+
+When you enter a M tile, a monster fight will occur where you will fight until one of you dies.
+
+The UML DIAGRAM:
+

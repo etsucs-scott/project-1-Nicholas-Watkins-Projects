@@ -6,15 +6,15 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace AdventureGame.Core;
 
-public interface ICharacter
-{
-    void Attack(ICharacter target);
-    void Damage(int damage);
-}
 public interface ISpawnable
 {
     public string _icon { get; }
     public (int, int) _coords { get; set; }
+}
+public interface ICharacter : ISpawnable
+{
+    void Attack(ICharacter target);
+    void Damage(int damage);
 }
 public abstract class Item : ISpawnable
 {
@@ -23,7 +23,7 @@ public abstract class Item : ISpawnable
     public string? _desc { get; set; }
     public (int, int) _coords { get; set; }
 }
-public class Player : ICharacter, ISpawnable
+public class Player : ICharacter
 {
     public string _icon { get; private set; } = " I ";
     public int _health { get; private set; } = 100;
@@ -173,7 +173,7 @@ public class Player : ICharacter, ISpawnable
         Console.ResetColor();
     }
 }
-public class Monster : ICharacter, ISpawnable
+public class Monster : ICharacter
 {
     public string _icon { get; private set; } = " M ";
     public string _name = "Monster";
@@ -328,7 +328,7 @@ public class Maze
         (int, int) coordPCP = player._coords;
         (int, int) coordExit = (exitTile._coords.Item1, exitTile._coords.Item2);
         (int, int) coordDif = (player._coords.Item1 - coordExit.Item1, player._coords.Item2 - coordExit.Item2);
-        
+
         // Bug where PCP needs 1+ loop to confirm with coordDif == coordExit break | Doubled playercoord values added to coordStorage
         while (coordDif.Item2 != 0 || coordDif.Item1 != 0)
         {
@@ -384,28 +384,4 @@ public class Maze
         return false;
     }
     public ISpawnable CheckCoordPosition((int, int) coord) { return _maze[coord.Item2][coord.Item1]; }
-
-    // Honestly Could make an algorithm that would be better than this...
-    public bool CanPlaceWall((int, int) coord)
-    {
-        List<(int, int)> coordAround = new List<(int, int)>() // Creates a 3x3 coord list with the original coord at the center
-        {
-            (coord.Item1 - 1, coord.Item2 - 1), (coord.Item1, coord.Item2 - 1), (coord.Item1 + 1, coord.Item2 - 1),
-            (coord.Item1 - 1, coord.Item2), coord, (coord.Item1 + 1, coord.Item2),
-            (coord.Item1 - 1, coord.Item2 + 1), (coord.Item1, coord.Item2 + 1), (coord.Item1 + 1, coord.Item2 + 1)
-        };
-
-        // Checks diagonals from middle and returns false if detecting a wall | Prevents cut offs theoretically...
-        for (int i = 0; i < coordAround.Count(); i++)
-        {
-            if (i % 2 != 0) // Checks diagonals
-            {
-                if (_maze[coordAround[i].Item2][coordAround[i].Item1].GetType() == typeof(Wall))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 }
