@@ -35,7 +35,7 @@ public class Player : ICharacter, ISpawnable
     public Player()
     {
         _currentDamage = _baseDamage;
-        _inventory = new List<Item>();
+        _inventory = new List<Item>(); // Technically could remove and just run with current method of weapon damage choice 
     }
     public void Attack(ICharacter target)
     {
@@ -48,6 +48,7 @@ public class Player : ICharacter, ISpawnable
         else
             _health -= damage;
     }
+    // Moves player | Should honestly refactor later and split into more class/functions 
     public void Move(Maze maze, Player player)
     {
         Console.WriteLine($"\nHP: {_health}\t\tDamage: {_currentDamage} ({_baseDamage} + {_currentDamage - _baseDamage})");
@@ -83,6 +84,15 @@ public class Player : ICharacter, ISpawnable
             maze._maze[_coords.Item2][_coords.Item1] = new Empty(); // Previous character area to empty
             maze._maze[newCoords.Item2][newCoords.Item1] = player; // Set next character to empty
             player._coords = newCoords;
+        }
+
+        // Wall
+        if (item.GetType() == typeof(Wall))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("A wall is blocking your way...\nPress enter to continue...");
+            Console.ReadLine();
+            Console.ResetColor();
         }
 
         // Potions & Weapons
@@ -141,6 +151,7 @@ public class Player : ICharacter, ISpawnable
             player._coords = newCoords;
         }
     }
+    // Uses an item | Could be refactored to make logic a bit better
     public void Use(Item item)
     {
         // Remove thing from mazelist 
@@ -236,8 +247,8 @@ public class Maze
     double _itemChance;
     double _wallChance;
 
-    // Should replace double with float but got error
-    public Maze(int height = 10, double monsterChance = .45, double itemChance = .35, double wallChance = .75)
+    // Should replace double with float but got error | Controls spawn chance for later new levels
+    public Maze(int height = 10, double monsterChance = .45, double itemChance = .35, double wallChance = 1.0) // M: .45, I: .35, W: .75
     {
         _height = height;
         _width = height;
@@ -280,8 +291,8 @@ public class Maze
         Random randPick = new Random();
 
         // PLACEHOLDER, Could init better in some way probably
-        // int dif = _width / (4 * _width);
-        int dif = 0;
+        int dif = _width / (4 * _width);
+        // int dif = 0;
         int mazeArea = _height * _height / 5;
 
         int monsterAmount = (int)(mazeArea * _monsterChance) + randPick.Next(-dif, dif);
@@ -290,51 +301,73 @@ public class Maze
         int wallAmount = (int)(mazeArea * _wallChance) + randPick.Next(-dif, dif);
 
         spawnables.Add(player);
-        spawnables.Add(new ExitTile());
+        ExitTile exitTile = new ExitTile();
+        spawnables.Add(exitTile);
 
-        // Generate spawnables | Could be better, settled for right now
-        for (int i = 0; i < wallAmount; i++)
-            spawnables.Add(new Wall());
-
+        // Generate spawnables (potions & weapons)
         for (int i = 0; i < potionAmount; i++)
             spawnables.Add(new Potion(_healAmount: randPick.Next(20, 30)));
 
         for (int i = 0; i < weaponAmount; i++)
             spawnables.Add(new Weapon(damage: randPick.Next(5, 20)));
 
-        for (int i = 0; i < monsterAmount; i++)
-            spawnables.Add(new Monster(health: randPick.Next(30, 50), damage: randPick.Next(10, 15)));
-
-        // Check Coord bank and assign spawnables coordinates in _coordStorage | Will also have wall logic to prevent "lock ins"
+        // Assign Player & Exit tile & items | TODO should be changed to better algorithm below...
         foreach (ISpawnable spawnable in spawnables)
         {
-            bool wallCheck = false;
             (int, int) newCoord = CoordGen();
-            while (InCoordBank(newCoord) || wallCheck)
+            while (InCoordBank(newCoord))
             {
-                // if (spawnable.GetType() == typeof(Wall)) // wall check disabled for now ########### PLACEHOLDER ##############
-                //     wallCheck = !CanPlaceWall(newCoord);
                 newCoord = CoordGen();
             }
             spawnable._coords = newCoord;
             _maze[newCoord.Item2][newCoord.Item1] = spawnable;
             _coordStorage.Add(newCoord);
         }
-    }
-    public void MazeDisplay()
-    {
-        Console.Clear(); // ########################### DEBUG DEBUG ########################################
-        // Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.BackgroundColor = ConsoleColor.DarkCyan;
-        foreach (ISpawnable[] itemList in _maze)
+
+        // Generate "blank tiles" that take up coord space to prevent "unwinable" maps
+        (int, int) coordPCP = player._coords;
+        (int, int) coordExit = (exitTile._coords.Item1, exitTile._coords.Item2);
+        (int, int) coordDif = (player._coords.Item1 - coordExit.Item1, player._coords.Item2 - coordExit.Item2);
+        
+        // Bug where PCP needs 1+ loop to confirm with coordDif == coordExit break | Doubled playercoord values added to coordStorage
+        while (coordDif.Item2 != 0 || coordDif.Item1 != 0)
         {
-            foreach (ISpawnable item in itemList)
+            if (coordPCP == coordExit)
+                break;
+            if (coordDif.Item1 != 0)
             {
-                Console.Write(item._icon);
+                coordPCP.Item1 -= 1 * Math.Sign(coordDif.Item1);
+                coordDif.Item1 -= 1 * Math.Sign(coordDif.Item1);
+                _coordStorage.Add(coordPCP);
             }
-            Console.Write("\n");
+            if (coordDif.Item2 != 0)
+            {
+                coordPCP.Item2 -= 1 * Math.Sign(coordDif.Item2);
+                coordDif.Item2 -= 1 * Math.Sign(coordDif.Item2);
+                _coordStorage.Add(coordPCP);
+            }
         }
-        Console.ResetColor();
+        spawnables = new List<ISpawnable>();
+
+        // Generate spawnables (walls & monsters) | Could be better, settled for right now
+        for (int i = 0; i < wallAmount; i++)
+            spawnables.Add(new Wall());
+
+        for (int i = 0; i < monsterAmount; i++)
+            spawnables.Add(new Monster(health: randPick.Next(30, 50), damage: randPick.Next(10, 15)));
+        
+        // Check Coord bank and assign spawnables coordinates in _coordStorage
+        foreach (ISpawnable spawnable in spawnables)
+        {
+            (int, int) newCoord = CoordGen();
+            while (InCoordBank(newCoord))
+            {
+                newCoord = CoordGen();
+            }
+            spawnable._coords = newCoord;
+            _maze[newCoord.Item2][newCoord.Item1] = spawnable;
+            _coordStorage.Add(newCoord);
+        }
     }
     public (int, int) CoordGen()
     {
