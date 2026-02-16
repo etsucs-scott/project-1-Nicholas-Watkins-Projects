@@ -7,7 +7,6 @@
             bool gameRun = true;
             Player player = new Player();
             Random heightGen = new Random();
-            int floorNum = 1;
 
             while (gameRun)
             {
@@ -18,17 +17,17 @@
                 // Main game loop
                 while (player._health > 0 && !maze._win)
                 {
-                    MazeDisplay(maze, floorNum);
+                    MazeDisplay(maze, maze._level);
                     player.Move(maze, player);
                 }
 
-                MazeDisplay(maze, floorNum);
+                MazeDisplay(maze, maze._level);
 
                 // Player win condition handling
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
                 if (player._health > 0)
                 {
-                    Console.WriteLine($"\nYou continue deeper into the mazes for your hunt for glory... +{200+(2*(floorNum - 1))}points\nPress enter to continue...");
+                    Console.WriteLine($"\nYou continue deeper into the mazes for your hunt for glory... +{200+(2*(maze._level - 1))}points\nPress enter to continue...");
                     Console.ReadLine();
                     Console.ResetColor();
                 }
@@ -42,23 +41,23 @@
                 if (playerResponse.Contains("y"))
                 {
                     gameRun = true;
-                    floorNum += 1;
-                    player._points += 200 + (2 * (floorNum - 1));
+                    maze._level += 1;
+                    player._points += 100;
                 }
                 else
                     gameRun = false;
                 if (player._health <= 0)
                 {
                     player = new Player();
-                    floorNum = 1;
+                    maze._level = 1;
                 }
             }
         }
-        public static void MazeDisplay(Maze maze, int floorNum)
+        public static void MazeDisplay(Maze maze, int level)
         {
             Console.Clear(); // ########################### DEBUG DEBUG ########################################
             Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine($"Floor {floorNum}\n");
+            Console.WriteLine($"Floor {level}\n");
             Console.ResetColor();
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.DarkCyan;

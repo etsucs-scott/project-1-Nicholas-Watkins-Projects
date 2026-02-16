@@ -110,7 +110,7 @@ public class Player : ICharacter
         if (item.GetType() == typeof(Monster))
         {
             Monster monster = (Monster)item;
-            int monsterHealthBefore = monster._health;
+            int monsterLevel = monster._health / monster._currentDamage;
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"\nAttacking a Monster... (HP:{monster._health} | D:{monster._currentDamage})\n");
             while (monster._health > 0 && _health > 0)
@@ -121,7 +121,7 @@ public class Player : ICharacter
                 if (monster._health <= 0)
                 {
                     // Award points based on monsters health before and how low the player health and how high the sword damage is
-                    int pointsEarned = Math.Max(10, monsterHealthBefore + monster._health - (int)((player._health - 100) * 1.5) - (int)((player._currentDamage) * 2));
+                    int pointsEarned = PointCalc(monsterLevel, maze._level);
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine($"You have kill the monster! +{pointsEarned} points");
                     player._points += pointsEarned;
@@ -175,6 +175,18 @@ public class Player : ICharacter
         Console.WriteLine("\n" + item._desc + "\nPress enter to continue...");
         Console.ReadLine();
         Console.ResetColor();
+    }
+    public int PointCalc(int monsterLevel, int level)
+    {
+        int playerHealthPoints;
+
+        if (_health < 30)
+            playerHealthPoints = 100;
+        else
+            playerHealthPoints = (-2 / 5) * _health + 40; //150HP -> -20 points & 50HP -> +20 points
+
+        int pointsRewarded = (Math.Max(1, monsterLevel) * 10) + (level * 10) + playerHealthPoints;
+        return pointsRewarded;
     }
 }
 public class Monster : ICharacter
@@ -243,6 +255,7 @@ public class Maze
     private int _height;
     private int _width;
     public bool _win { get; set; } = false;
+    public int _level { get; set; } = 1;
 
     // public List<double> _spawnChance { get; private set; } = new List<double>();
     public List<ISpawnable[]> _maze { get; set; }
