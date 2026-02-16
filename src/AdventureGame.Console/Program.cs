@@ -35,7 +35,7 @@
 
                 // New game continue | Could add new floors
                 Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.WriteLine("Continue? (Y/N): ");
+                Console.WriteLine("\nContinue? (Y/N): ");
                 string? playerResponse = Console.ReadLine()?.ToString().ToLower();
                 Console.ResetColor();
 
@@ -48,7 +48,10 @@
                 else
                     gameRun = false;
                 if (player._health <= 0)
+                {
                     player = new Player();
+                    floorNum = 1;
+                }
             }
         }
         public static void MazeDisplay(Maze maze, int floorNum)
