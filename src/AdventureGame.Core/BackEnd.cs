@@ -25,13 +25,13 @@ public abstract class Item : ISpawnable
 }
 public class Player : ICharacter
 {
-    public string _icon { get; private set; } = " I ";
+    public string _icon { get; private set; } = " @ ";
     public int _health { get; private set; } = 100;
     public int _baseDamage { get; private set; } = 10;
     public int _currentDamage { get; private set; }
     public List<Item> _inventory { get; private set; }
     public (int, int) _coords { get; set; }
-    public int _points { get; private set; }
+    public int _points { get; set; } = 0;
     public Player()
     {
         _currentDamage = _baseDamage;
@@ -51,7 +51,7 @@ public class Player : ICharacter
     // Moves player | Should honestly refactor later and split into more class/functions 
     public void Move(Maze maze, Player player)
     {
-        Console.WriteLine($"\nHP: {_health}\t\tDamage: {_currentDamage} ({_baseDamage} + {_currentDamage - _baseDamage})");
+        Console.WriteLine($"\nHP: {_health}\t\tDamage: {_currentDamage} ({_baseDamage} + {_currentDamage - _baseDamage})\tPoints: {_points}");
         // Check next area and mv to spot if empty or Use thing
         string playerInput = Console.ReadKey(true).Key.ToString();
         (int, int) newCoords;
@@ -110,6 +110,7 @@ public class Player : ICharacter
         if (item.GetType() == typeof(Monster))
         {
             Monster monster = (Monster)item;
+            int monsterHealthBefore = monster._health;
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine($"\nAttacking a Monster... (HP:{monster._health} | D:{monster._currentDamage})\n");
             while (monster._health > 0 && _health > 0)
@@ -119,8 +120,11 @@ public class Player : ICharacter
                 Console.WriteLine($"You attack for {_currentDamage} damage!\n\tthe monsters health is down to {monster._health}\n");
                 if (monster._health <= 0)
                 {
+                    // Award points based on monsters health before and how low the player health and how high the sword damage is
+                    int pointsEarned = Math.Max(10, monsterHealthBefore + monster._health - (int)((player._health - 100) * 1.5) - (int)((player._currentDamage) * 2));
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("You have kill the monster!");
+                    Console.WriteLine($"You have kill the monster! +{pointsEarned} points");
+                    player._points += pointsEarned;
                     (int, int) monsterCoords = monster._coords;
                     maze._maze[monsterCoords.Item2][monsterCoords.Item1] = new Empty();
                 }

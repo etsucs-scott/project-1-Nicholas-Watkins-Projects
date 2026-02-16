@@ -25,19 +25,18 @@ s - down
 a - left
 d - right
 
-You will automatically interact with things on the maze
+You will automatically interact with things on the maze and have to press enter to continue
 
-The maze will appear in a 15x15 layout and underneath it is your health and damage
+The maze will appear randomly between 10x10 to 20x20 layout and underneath it is your health and damage
 
-HP: 100         Damage: 10 (10 + 0)
-^                       ^   ^    ^
-Current health          Total damage (base damage + weapon modifier)
+HP: 100         Damage: 10 (10 + 0)                                     Points: 0
+^                       ^   ^    ^                                      ^
+Current health          Total damage (base damage + weapon modifier)    Points from kiling monsters and going through mazes  
 
 
-To win the game, you need to reach the exit tile, noted as a character "E". As long as you reach it you win.
-Once you win the game you will be prompted to replay. Enter "Y" to continue or anything else to quit.
+To win the game, you need to reach the exit tile, noted as a character "E". As long as you reach it, you win.
+Once you win the game, you will be prompted to replay. Enter "Y" to continue or anything else to quit.
 
 When you enter a M tile, a monster fight will occur where you will fight until one of you dies.
 
-The UML DIAGRAM:
-
+The UML DIAGRAM is included in the REPO
