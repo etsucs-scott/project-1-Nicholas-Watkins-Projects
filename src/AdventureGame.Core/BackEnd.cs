@@ -264,17 +264,21 @@ public class Maze
     double _wallChance;
 
     // Should replace double with float but got error | Controls spawn chance for later new levels
-    public Maze(double monsterChance = .45, double itemChance = .35, double wallChance = 1.0) // M: .45, I: .35, W: .75
+    public Maze() 
     {
         _maze = new List<ISpawnable[]>();
         _coordStorage = new List<(int, int)>();
+    }
+    public void MazeGen(Player player, int height, double monsterChance = .45, double itemChance = .35, double wallChance = 1.0) // M: .45, I: .35, W: .75
+    {
+        // Refresh variables
+        _win = false;
+        _maze = new List<ISpawnable[]>();
+        _coordStorage = new List<(int, int)>();
+        _height = height;
         _monsterChance = monsterChance;
         _itemChance = itemChance;
         _wallChance = wallChance;
-    }
-    public void MazeGen(Player player, int height)
-    {
-        _height = height;
         // Make Empty Maze
         for (int y = 0; y < _height; y++)
         {
