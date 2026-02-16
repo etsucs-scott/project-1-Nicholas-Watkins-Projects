@@ -252,8 +252,7 @@ public class ExitTile : ISpawnable
 }
 public class Maze
 {
-    private int _height;
-    private int _width;
+    public int _height { get; set; }
     public bool _win { get; set; } = false;
     public int _level { get; set; } = 1;
 
@@ -265,36 +264,35 @@ public class Maze
     double _wallChance;
 
     // Should replace double with float but got error | Controls spawn chance for later new levels
-    public Maze(int height = 10, double monsterChance = .45, double itemChance = .35, double wallChance = 1.0) // M: .45, I: .35, W: .75
+    public Maze(double monsterChance = .45, double itemChance = .35, double wallChance = 1.0) // M: .45, I: .35, W: .75
     {
-        _height = height;
-        _width = height;
         _maze = new List<ISpawnable[]>();
         _coordStorage = new List<(int, int)>();
         _monsterChance = monsterChance;
         _itemChance = itemChance;
         _wallChance = wallChance;
     }
-    public void MazeGen(Player player)
+    public void MazeGen(Player player, int height)
     {
+        _height = height;
         // Make Empty Maze
         for (int y = 0; y < _height; y++)
         {
             // Make Solid line
-            if (y == 0 || y == _width - 1)
+            if (y == 0 || y == _height - 1)
             {
-                ISpawnable[] wallLine = new ISpawnable[_width];
-                for (int x = 0; x < _width; x++)
+                ISpawnable[] wallLine = new ISpawnable[_height];
+                for (int x = 0; x < _height; x++)
                     wallLine[x] = new Wall();
                 _maze.Add(wallLine);
             }
             // Make Mid line
             else
             {
-                ISpawnable[] midLine = new ISpawnable[_width];
-                for (int x = 0; x < _width; x++)
+                ISpawnable[] midLine = new ISpawnable[_height];
+                for (int x = 0; x < _height; x++)
                 {
-                    if (x == 0 || x == _width - 1)
+                    if (x == 0 || x == _height - 1)
                         midLine[x] = new Wall();
                     else
                         midLine[x] = new Empty();
@@ -308,7 +306,7 @@ public class Maze
         Random randPick = new Random();
 
         // PLACEHOLDER, Could init better in some way probably
-        int dif = _width / (4 * _width);
+        int dif = _height / (4 * _height);
         // int dif = 0;
         int mazeArea = _height * _height / 5;
 
@@ -389,7 +387,7 @@ public class Maze
     public (int, int) CoordGen()
     {
         Random randPick = new Random();
-        return (randPick.Next(1, _width - 1), randPick.Next(1, _width - 1));
+        return (randPick.Next(1, _height - 1), randPick.Next(1, _height - 1));
     }
     public bool InCoordBank((int, int) coord)
     {

@@ -14,22 +14,22 @@
         {
             bool gameRun = true;
             Player player = new Player();
+            Maze maze = new Maze();
             Random heightGen = new Random();
 
             while (gameRun)
             {
                 // Error in MazeGen where if percent spawns are too high, it cant find a coord slot for items and infinitly loops
-                Maze maze = new Maze(height: heightGen.Next(10, 15));
-                maze.MazeGen(player);
+                maze.MazeGen(player, heightGen.Next(10, 15));
 
                 // Main game loop
                 while (player._health > 0 && !maze._win)
                 {
-                    MazeDisplay(maze, maze._level);
+                    MazeDisplay(maze);
                     player.Move(maze, player);
                 }
 
-                MazeDisplay(maze, maze._level);
+                MazeDisplay(maze);
 
                 // Player win condition handling
                 Console.ForegroundColor = ConsoleColor.DarkMagenta;
@@ -61,11 +61,11 @@
                 }
             }
         }
-        public static void MazeDisplay(Maze maze, int level)
+        public static void MazeDisplay(Maze maze)
         {
             Console.Clear(); // ########################### DEBUG DEBUG ########################################
             Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine($"Floor {level}\n");
+            Console.WriteLine($"Floor {maze._level}\n");
             Console.ResetColor();
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
