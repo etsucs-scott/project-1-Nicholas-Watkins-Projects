@@ -106,7 +106,7 @@ public class Player : ICharacter
             player._coords = newCoords;
         }
 
-        // Monster - When monster is killed add points (_points) based on health + enemy health + attack...
+        // Monster - When monster is killed add points (_points)
         if (item.GetType() == typeof(Monster))
         {
             Monster monster = (Monster)item;
@@ -138,7 +138,7 @@ public class Player : ICharacter
             if (_health <= 0)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("You died in battle\nThe world continues on without you...");
+                Console.WriteLine("You died in battle...\nThe world continues on without you...");
                 maze._maze[_coords.Item2][_coords.Item1] = new Empty();
             }
             Console.ResetColor();

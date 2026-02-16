@@ -12,7 +12,7 @@
             while (gameRun)
             {
                 // Error in MazeGen where if percent spawns are too high, it cant find a coord slot for items and infinitly loops
-                Maze maze = new Maze(height: heightGen.Next(10, 20));
+                Maze maze = new Maze(height: heightGen.Next(10, 15));
                 maze.MazeGen(player);
 
                 // Main game loop
@@ -47,7 +47,7 @@
                 }
                 else
                     gameRun = false;
-                if (player._health < 0)
+                if (player._health <= 0)
                     player = new Player();
             }
         }
