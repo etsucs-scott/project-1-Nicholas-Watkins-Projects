@@ -59,6 +59,8 @@
             Console.Clear(); // ########################### DEBUG DEBUG ########################################
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine($"Floor {floorNum}\n");
+            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
             foreach (ISpawnable[] itemList in maze._maze)
             {
