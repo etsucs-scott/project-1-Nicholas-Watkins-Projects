@@ -2,6 +2,14 @@
 {
     public class Program
     {
+        /**
+        TODO:
+            Scaleing
+            Monster._health & Monster._currentDamage should scale per level
+            Item._heal if a new item "max health" is added
+            Weapons._damage 
+            player.PointsCalc
+        **/
         public static void Main(string[] args)
         {
             bool gameRun = true;
