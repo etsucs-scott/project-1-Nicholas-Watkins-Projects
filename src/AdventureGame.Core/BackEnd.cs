@@ -251,7 +251,7 @@ public class Potion : Item
 }
 public class Empty : ISpawnable
 {
-    public string _icon { get; private set; } = " . ";
+    public string _icon { get; private set; } = "   ";
     public (int, int) _coords { get; set; }
 }
 public class Wall : ISpawnable

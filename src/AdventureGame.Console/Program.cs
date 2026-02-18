@@ -67,12 +67,16 @@
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine($"Floor {maze._level}\n");
             Console.ResetColor();
-            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = ConsoleColor.Black;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
             foreach (ISpawnable[] itemList in maze._maze)
             {
                 foreach (ISpawnable item in itemList)
                 {
+                    if (item.GetType() == typeof(Player))
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    else
+                        Console.ForegroundColor = ConsoleColor.Black;
                     Console.Write(item._icon);
                 }
                 Console.Write("\n");
