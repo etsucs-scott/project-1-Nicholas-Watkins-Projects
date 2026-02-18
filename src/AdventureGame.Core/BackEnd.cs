@@ -70,6 +70,20 @@ public class Player : ICharacter
             case "D":
                 newCoords = (_coords.Item1 + 1, _coords.Item2);
                 break;
+
+            // Added Arrow keys
+            case "UpArrow":
+                newCoords = (_coords.Item1, _coords.Item2 - 1);
+                break;
+            case "DownArrow":
+                newCoords = (_coords.Item1, _coords.Item2 + 1);
+                break;
+            case "LeftArrow":
+                newCoords = (_coords.Item1 - 1, _coords.Item2);
+                break;
+            case "RightArrow":
+                newCoords = (_coords.Item1 + 1, _coords.Item2);
+                break;
             default:
                 newCoords = _coords;
                 break;
